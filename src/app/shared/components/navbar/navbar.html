@@ -1,0 +1,31 @@
+<mat-toolbar color="primary" class="navbar">
+  <!-- Logo o titolo -->
+  <span class="logo">My Industrial Monitor</span>
+
+  <!-- Spazio tra logo e bottoni -->
+  <span class="spacer"></span>
+
+  <!-- Stato analyzer -->
+  <span class="status" [ngClass]="analyzerRunning ? 'running' : 'stopped'">
+    <span class="status-indicator"></span>
+    Analyzer: {{ analyzerRunning ? "Running" : "Stopped" }}
+  </span>
+
+  <span class="spacer"></span>
+  <!-- Link di navigazione -->
+  <button mat-button routerLink="/dashboard">Dashboard</button>
+  <button mat-button routerLink="/deployments">Deployments</button>
+  <button mat-button routerLink="/users">Utenti</button>
+
+  
+
+  <!-- Icona profilo/login -->
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item>Profilo</button>
+    <button mat-menu-item (click)="logout()">Logout</button>
+  </mat-menu>
+</mat-toolbar>

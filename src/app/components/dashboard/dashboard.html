@@ -1,0 +1,269 @@
+<!-- Dashboard Container -->
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">
+      <i class="fas fa-chart-line"></i>
+      OpenSearch Analytics Dashboard
+    </h1>
+    
+    <!-- Tenant Selector -->
+    <div class="tenant-selector">
+      <label for="tenant-select">Seleziona Tenant:</label>
+      <select 
+        id="tenant-select" 
+        [(ngModel)]="selectedTenant" 
+        (change)="onTenantChange()"
+        class="tenant-dropdown">
+        <option value="">-- Seleziona un tenant --</option>
+        <option *ngFor="let tenant of tenants" [value]="tenant.id">
+          {{tenant.name}}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Caricamento dati...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && selectedTenant" class="dashboard-content">
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-database"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{totalIndices}}</h3>
+          <p>Indici Totali</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{totalDocuments | number}}</h3>
+          <p>Documenti Totali</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-hdd"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{totalSize}}</h3>
+          <p>Dimensione Totale</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{lastUpdateTime}}</h3>
+          <p>Ultimo Aggiornamento</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Index Tabs -->
+    <div class="tabs-container">
+      <div class="tabs-header">
+        <button 
+          *ngFor="let index of indices; let i = index" 
+          class="tab-button"
+          [class.active]="activeTabIndex === i"
+          (click)="selectTab(i)">
+          <i class="fas fa-layer-group"></i>
+          {{index.name}}
+          <span class="tab-badge">{{index.documents | number}}</span>
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content" *ngIf="activeTabIndex !== -1">
+        <div class="tab-panel">
+          
+          <!-- Index Info -->
+          <div class="index-info">
+            <h3>{{indices[activeTabIndex].name}}</h3>
+            <div class="index-details">
+              <span class="detail-item">
+                <i class="fas fa-file-alt"></i>
+                {{indices[activeTabIndex].documents | number}} documenti
+              </span>
+              <span class="detail-item">
+                <i class="fas fa-hdd"></i>
+                {{indices[activeTabIndex].size}}
+              </span>
+              <span class="detail-item">
+                <i class="fas fa-calendar"></i>
+                Creato: {{indices[activeTabIndex].created | date:'short'}}
+              </span>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            
+            <!-- Documents Over Time Chart -->
+            <div class="chart-container">
+              <div class="chart-header">
+                <h4>Documenti nel Tempo</h4>
+                <div class="chart-controls">
+                  <button class="chart-btn" (click)="refreshChart('timeline')">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas 
+                  baseChart
+                  [data]="timelineChartData"
+                  [options]="timelineChartOptions"
+                  [type]="'line'">
+                </canvas>
+              </div>
+            </div>
+
+            <!-- Field Distribution Chart -->
+            <div class="chart-container">
+              <div class="chart-header">
+                <h4>Distribuzione per Campo</h4>
+                <div class="chart-controls">
+                  <button class="chart-btn" (click)="refreshChart('distribution')">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas 
+                  baseChart
+                  [data]="distributionChartData"
+                  [options]="distributionChartOptions"
+                  [type]="'doughnut'">
+                </canvas>
+              </div>
+            </div>
+
+            <!-- Status Chart -->
+            <div class="chart-container">
+              <div class="chart-header">
+                <h4>Status dei Documenti</h4>
+                <div class="chart-controls">
+                  <button class="chart-btn" (click)="refreshChart('status')">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas 
+                  baseChart
+                  [data]="statusChartData"
+                  [options]="statusChartOptions"
+                  [type]="'bar'">
+                </canvas>
+              </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="chart-container">
+              <div class="chart-header">
+                <h4>Metriche di Performance</h4>
+                <div class="chart-controls">
+                  <button class="chart-btn" (click)="refreshChart('performance')">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas 
+                  baseChart
+                  [data]="performanceChartData"
+                  [options]="performanceChartOptions"
+                  [type]="'radar'">
+                </canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Data Table -->
+          <div class="data-table-container">
+            <div class="table-header">
+              <h4>Ultimi Documenti</h4>
+              <div class="table-controls">
+                <input 
+                  type="text" 
+                  placeholder="Cerca..."
+                  [(ngModel)]="searchTerm"
+                  (input)="filterDocuments()"
+                  class="search-input">
+                <button class="table-btn" (click)="refreshDocuments()">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Dimensione</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let doc of filteredDocuments">
+                    <td>{{doc.id}}</td>
+                    <td>{{doc.timestamp | date:'short'}}</td>
+                    <td>
+                      <span class="type-badge" [class]="'type-' + doc.type">
+                        {{doc.type}}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-badge" [class]="'status-' + doc.status">
+                        {{doc.status}}
+                      </span>
+                    </td>
+                    <td>{{doc.size}}</td>
+                    <td>
+                      <button class="action-btn" (click)="viewDocument(doc.id)">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Tenant Selected -->
+  <div *ngIf="!isLoading && !selectedTenant" class="no-tenant-message">
+    <div class="empty-state">
+      <i class="fas fa-database"></i>
+      <h3>Seleziona un Tenant</h3>
+      <p>Scegli un tenant dal menu a tendina per visualizzare i dati degli indici</p>
+    </div>
+  </div>
+
+</div>
